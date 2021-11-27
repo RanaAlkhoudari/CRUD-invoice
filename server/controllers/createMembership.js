@@ -1,4 +1,4 @@
-const Membership = require("../models/membership.model");
+const Membership = require("../models/membershipModel");
 
 async function createMembership(req, res) {
   try {

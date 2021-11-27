@@ -1,4 +1,4 @@
-const Invoice = require("../models/invoice.model");
+const Invoice = require("../models/invoiceModel");
 
 async function updateInvoice(req, res) {
   try {

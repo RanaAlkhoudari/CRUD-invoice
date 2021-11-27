@@ -1,6 +1,6 @@
-const Membership = require("../models/membership.model");
+const Membership = require("../models/membershipModel");
 const nearest = require("nearest-date");
-const Invoice = require("../models/invoice.model");
+const Invoice = require("../models/invoiceModel");
 
 async function checkIn(req, res) {
   try {
@@ -8,12 +8,10 @@ async function checkIn(req, res) {
       "invoices"
     );
     let active = false;
-    const currentDate = new Date().toJSON().slice(0, 10);
+    const currentDate = new Date();
     const from = membership[0].start_date;
     const to = membership[0].end_date;
     const check = new Date(currentDate);
-    const firstDayOfTheMonth = new Date().toISOString().slice(0, 8) + "01";
-
     if (check > from && check < to) {
       active = true;
     } else {
@@ -33,6 +31,7 @@ async function checkIn(req, res) {
         credits: newCredit,
       });
       await findMembership.save();
+      const firstDayOfTheMonth = new Date().toISOString().slice(0, 8) + "01";
       const data = {
         status: "Outstanding",
         description: "The first invoice",
@@ -57,9 +56,7 @@ async function checkIn(req, res) {
         membership[0].invoices.forEach((invoice) => {
           arr.push(new Date(invoice.date));
         });
-        const target = new Date(currentDate);
-        const index = nearest(arr, target);
-        const now = new Date();
+        const index = nearest(arr, currentDate);
         const filtered = membership[0].invoices.filter((invoice) => {
           return (
             JSON.stringify(new Date(invoice.date)) ===
@@ -68,8 +65,8 @@ async function checkIn(req, res) {
         });
         const invoice = await Invoice.findById(filtered[0]._id);
         if (
-          arr[index].getFullYear() == now.getFullYear() &&
-          arr[index].getMonth() == now.getMonth()
+          arr[index].getFullYear() == currentDate.getFullYear() &&
+          arr[index].getMonth() == currentDate.getMonth()
         ) {
           const nowInvoiceLine = {
             amount: newCredit,
