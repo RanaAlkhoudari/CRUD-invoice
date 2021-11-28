@@ -9,7 +9,7 @@ const invoiceSchema = new Schema({
   },
   description: { type: String, required: true },
   amount: { type: Number, required: true },
-  invoice_lines: [],
+  invoice_lines: [{ amount: { type: Number }, description: { type: String } }],
 });
 
 const Invoice = mongoose.model("invoice", invoiceSchema);

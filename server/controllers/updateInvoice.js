@@ -3,15 +3,18 @@ const Invoice = require("../models/invoiceModel");
 async function updateInvoice(req, res) {
   try {
     const invoice = await Invoice.findById(req.params.id);
-    Object.assign(invoice, req.body);
+    const data = {
+      date: req.body.date || invoice.date,
+      status: req.body.status || invoice.status,
+      description: req.body.description || invoice.description,
+      amount: req.body.amount || invoice.amount,
+      invoice_lines: req.body.invoice_lines || invoice.invoice_lines,
+    };
+    Object.assign(invoice, data);
     await invoice.save();
     res.status(200).send(invoice);
-  } catch {
-    res
-      .status(404)
-      .json(
-        `Invoice with the id ${req.params.id} does not exist in the database`
-      );
+  } catch (error) {
+    res.status(500).json(`An error occurred: ${error}`);
   }
 }
 

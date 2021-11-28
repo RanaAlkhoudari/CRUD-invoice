@@ -6,7 +6,7 @@ async function createUser(req, res) {
     const savedUser = await user.save();
     res.status(201).json(savedUser);
   } catch (error) {
-    res.status(400).json(`An error occurred: ${error}`);
+    res.status(500).json(`An error occurred: ${error}`);
   }
 }
 

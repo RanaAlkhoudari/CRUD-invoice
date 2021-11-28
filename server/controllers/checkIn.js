@@ -1,98 +1,76 @@
 const Membership = require("../models/membershipModel");
-const nearest = require("nearest-date");
 const Invoice = require("../models/invoiceModel");
+const checkActivity = require("../helpers/checkActivity");
 
 async function checkIn(req, res) {
   try {
-    const membership = await Membership.find({ user: req.params.id }).populate(
-      "invoices"
-    );
+    const membership = await Membership.findOne({
+      user: req.params.id,
+    }).populate("invoices");
     let active = false;
     const currentDate = new Date();
-    const from = membership[0].start_date;
-    const to = membership[0].end_date;
-    const check = new Date(currentDate);
-    if (check > from && check < to) {
-      active = true;
-    } else {
-      active = false;
-    }
+    active = checkActivity(membership.start_date, membership.end_date);
 
-    if (membership[0].credits <= 0) {
+    if (membership.credits <= 0) {
       res
         .status(400)
-        .json(`Unfortunately, your credits are: ${membership[0].credits}`);
+        .json(`Unfortunately, your credits are: ${membership.credits}`);
     } else if (active === false) {
       res.status(400).json(`Unfortunately, your membership is cancelled`);
     } else {
-      const newCredit = (membership[0].credits = membership[0].credits - 1);
-      const findMembership = await Membership.findById(membership[0]._id);
-      Object.assign(findMembership, {
+      const newCredit = (membership.credits = membership.credits - 1);
+      Object.assign(membership, {
         credits: newCredit,
       });
-      await findMembership.save();
+      await membership.save();
       const firstDayOfTheMonth = new Date().toISOString().slice(0, 8) + "01";
-      const data = {
-        status: "Outstanding",
-        description: "The first invoice",
-        amount: newCredit,
-        date: firstDayOfTheMonth,
-        invoice_lines: [
-          { amount: newCredit, description: "The first invoice line" },
-        ],
-      };
 
-      if (membership[0].invoices.length === 0) {
+      const matchInvoice = membership.invoices.filter((invoice) => {
+        return (
+          JSON.stringify(new Date(invoice.date)).substring(0, 8) ===
+          JSON.stringify(new Date(currentDate)).substring(0, 8)
+        );
+      });
+
+      if (membership.invoices.length === 0 || matchInvoice.length === 0) {
+        const data = {
+          status: "Outstanding",
+          description: "The first invoice",
+          amount: newCredit,
+          date: firstDayOfTheMonth,
+          invoice_lines: [
+            {
+              amount: newCredit,
+              description: `You checked in on ${currentDate.toLocaleString()}`,
+            },
+          ],
+        };
         const newInvoice = await new Invoice(data);
         const savedInvoice = await newInvoice.save();
-        Object.assign(findMembership, {
-          invoices: savedInvoice,
+        Object.assign(membership, {
+          invoices: [...membership.invoices, savedInvoice],
         });
-
-        await findMembership.save();
-        return res.status(201).json(`Your first invoice is created`);
-      } else {
-        const arr = [];
-        membership[0].invoices.forEach((invoice) => {
-          arr.push(new Date(invoice.date));
-        });
-        const index = nearest(arr, currentDate);
-        const filtered = membership[0].invoices.filter((invoice) => {
-          return (
-            JSON.stringify(new Date(invoice.date)) ===
-            JSON.stringify(new Date(arr[index]))
+        await membership.save();
+        return res
+          .status(201)
+          .json(
+            `Your first invoice for this month is created, your credits are: ${newCredit}`
           );
+      } else {
+        const invoice = await Invoice.findById(matchInvoice[0]._id);
+        const nowInvoiceLine = {
+          amount: newCredit,
+          description: `You checked in on ${currentDate.toLocaleString()}`,
+        };
+        Object.assign(invoice, {
+          invoice_lines: [...invoice.invoice_lines, nowInvoiceLine],
         });
-        const invoice = await Invoice.findById(filtered[0]._id);
-        if (
-          arr[index].getFullYear() == currentDate.getFullYear() &&
-          arr[index].getMonth() == currentDate.getMonth()
-        ) {
-          const nowInvoiceLine = {
-            amount: newCredit,
-            description: "pilates",
-          };
-          Object.assign(invoice, {
-            invoice_lines: [...invoice.invoice_lines, nowInvoiceLine],
-          });
-          await invoice.save();
-          return res
-            .status(200)
-            .json(
-              `Your Invoice lines are updated, your credits are: ${newCredit}`
-            );
-        } else {
-          const newInvoice = await new Invoice(data);
-          const savedInvoice = await newInvoice.save();
-          Object.assign(findMembership, {
-            invoices: [...membership[0].invoices, savedInvoice],
-          });
-
-          await findMembership.save();
-          return res
-            .status(201)
-            .json(`Your first invoice for this month is created`);
-        }
+        await invoice.save();
+        return res
+          .status(200)
+          .json(
+            `Your Invoice lines are updated, your credits are: ${newCredit}`
+          );
       }
     }
   } catch (error) {

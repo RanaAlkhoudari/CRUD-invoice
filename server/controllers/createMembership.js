@@ -6,7 +6,7 @@ async function createMembership(req, res) {
     const savedMembership = await membership.save();
     res.status(201).json(savedMembership);
   } catch (error) {
-    res.status(400).json(`An error occurred: ${error}`);
+    res.status(500).json(`An error occurred: ${error}`);
   }
 }
 

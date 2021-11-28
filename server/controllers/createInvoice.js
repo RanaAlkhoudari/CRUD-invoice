@@ -6,7 +6,7 @@ async function createInvoice(req, res) {
     const savedInvoice = await invoice.save();
     res.status(201).json(savedInvoice);
   } catch (error) {
-    res.status(400).send(`An error occurred: ${error}`);
+    res.status(500).send(`An error occurred: ${error}`);
   }
 }
 
