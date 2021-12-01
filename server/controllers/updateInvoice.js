@@ -3,6 +3,12 @@ const Invoice = require("../models/invoiceModel");
 async function updateInvoice(req, res) {
   try {
     const invoice = await Invoice.findById(req.params.id);
+    if (!invoice) {
+      return res.status(404).json({
+        message: `Invoice with the id ${req.params.id} does not exist in the database`,
+      });
+    }
+
     const data = {
       date: req.body.date || invoice.date,
       status: req.body.status || invoice.status,

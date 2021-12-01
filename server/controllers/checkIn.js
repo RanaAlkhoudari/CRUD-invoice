@@ -51,30 +51,22 @@ async function checkIn(req, res) {
           invoices: [...membership.invoices, savedInvoice],
         });
         await membership.save();
-        return res
-          .status(201)
-          .json(
-            `Your first invoice for this month is created, your credits are: ${newCredit}`
-          );
+        return res.status(201).json(savedInvoice);
       } else {
         const invoice = await Invoice.findById(matchInvoice[0]._id);
-        const nowInvoiceLine = {
+        const newInvoiceLine = {
           amount: newCredit,
           description: `You checked in on ${currentDate.toLocaleString()}`,
         };
         Object.assign(invoice, {
-          invoice_lines: [...invoice.invoice_lines, nowInvoiceLine],
+          invoice_lines: [...invoice.invoice_lines, newInvoiceLine],
         });
         await invoice.save();
-        return res
-          .status(200)
-          .json(
-            `Your Invoice lines are updated, your credits are: ${newCredit}`
-          );
+        return res.status(200).json(invoice);
       }
     }
   } catch (error) {
-    res.status(400).json(`An error occurred: ${error}`);
+    res.status(500).json(`An error occurred: ${error}`);
   }
 }
 

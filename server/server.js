@@ -6,8 +6,6 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 dotenv.config();
 
-const port = process.env.PORT;
-
 const app = express();
 
 app.use(cors());
@@ -25,4 +23,4 @@ mongoose.connection
   .once("open", () => console.log("Connected successfully"))
   .on("error", (error) => console.log(`connection error: ${error} `));
 
-app.listen(port, () => console.log(`Server running on port: ${port}`));
+module.exports = app;
