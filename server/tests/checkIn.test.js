@@ -7,13 +7,9 @@ const Invoice = require("../models/invoiceModel");
 const clearDatabase = require("../helpers/clearDatabase");
 
 //Using beforeAll to clear database, the test runs sequentially because of --runInBand in package.json
-//This way we can check the results in mongoDB Atlas
 beforeAll(async () => await clearDatabase());
 
-afterAll((done) => {
-  mongoose.connection.close();
-  done();
-});
+afterAll(() => mongoose.connection.close());
 
 const membership = {
   credits: 3,
@@ -58,41 +54,9 @@ describe("POST /membership/create", () => {
       expect(res.body.user).toBe(membership.user);
       const savedMembership = await Membership.findById(res.body._id);
       expect(savedMembership._id.toString()).toEqual(newMembership[0]._id);
-
-      const res2 = await request
-        .post("/membership/create")
-        .send(membershipCredits0);
-      expect(res2.body._id).toBeDefined();
-      expect(res2.statusCode).toBe(201);
-      expect(res2.body.credits).toBe(membershipCredits0.credits);
-      expect(new Date(res2.body.start_date)).toEqual(
-        new Date(membershipCredits0.start_date)
-      );
-      expect(new Date(res2.body.end_date)).toEqual(
-        new Date(membershipCredits0.end_date)
-      );
-      expect(res2.body.invoices).toEqual(membershipCredits0.invoices);
-      expect(res2.body.user).toBe(membershipCredits0.user);
-
-      const savedMembership2 = await Membership.findById(res2.body._id);
-      expect(savedMembership2).not.toBeNull();
-
-      const res3 = await request
-        .post("/membership/create")
-        .send(membershipNotActive);
-      expect(res3.body._id).toBeDefined();
-      expect(res3.statusCode).toBe(201);
-      expect(res3.body.credits).toBe(membershipNotActive.credits);
-      expect(new Date(res3.body.start_date)).toEqual(
-        new Date(membershipNotActive.start_date)
-      );
-      expect(new Date(res3.body.end_date)).toEqual(
-        new Date(membershipNotActive.end_date)
-      );
-      expect(res3.body.invoices).toEqual(membershipNotActive.invoices);
-      expect(res3.body.user).toBe(membershipNotActive.user);
-      const savedMembership3 = await Membership.findById(res3.body._id);
-      expect(savedMembership3).not.toBeNull();
+      //adding two other memberships to use them below when check In
+      await request.post("/membership/create").send(membershipCredits0);
+      await request.post("/membership/create").send(membershipNotActive);
     });
   });
 
@@ -135,12 +99,11 @@ describe("GET /checkIn/:id", () => {
       expect(res.statusCode).toBe(201);
       const newInvoice = await Invoice.findById(res.body._id);
       const length = newInvoice.invoice_lines.length;
-      expect(newInvoice.status).toBeTruthy();
-      expect(newInvoice.date).toBeTruthy();
-      expect(newInvoice.amount).toBeTruthy();
-      expect(newInvoice.date).toBeTruthy();
-      expect(newInvoice.description).toBeTruthy();
-      expect(newInvoice.invoice_lines).toBeTruthy();
+      expect(typeof newInvoice.status).toBe("string");
+      expect(typeof newInvoice.amount).toBe("number");
+      expect(typeof newInvoice.description).toBe("string");
+      expect(newInvoice.date).toBeInstanceOf(Date);
+      expect(Array.isArray(newInvoice.invoice_lines)).toBe(true);
 
       const res2 = await request.get(`/checkIn/${membership.user}`);
       const updatedInvoice = await Invoice.findById(res2.body._id);

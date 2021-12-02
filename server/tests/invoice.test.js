@@ -3,11 +3,11 @@ const supertest = require("supertest");
 const request = supertest(app);
 const mongoose = require("mongoose");
 const Invoice = require("../models/invoiceModel");
+const clearDatabase = require("../helpers/clearDatabase");
 
-afterAll((done) => {
-  mongoose.connection.close();
-  done();
-});
+beforeAll(async () => await clearDatabase());
+
+afterAll(() => mongoose.connection.close());
 
 const invoice = {
   status: "Outstanding",
@@ -22,7 +22,7 @@ const invoice = {
   ],
 };
 
-const nweInvoice = [];
+const newInvoice = [];
 
 describe("POST /invoice/create", () => {
   describe("create & save invoice successfully", () => {
@@ -30,7 +30,7 @@ describe("POST /invoice/create", () => {
       const res = await request.post("/invoice/create").send(invoice);
       expect(res.statusCode).toBe(201);
       expect(res.body._id).toBeDefined();
-      nweInvoice.push(res.body);
+      newInvoice.push(res.body);
       expect(res.body.status).toBe(invoice.status);
       expect(res.body.description).toBe(invoice.description);
       expect(res.body.amount).toBe(invoice.amount);
@@ -42,7 +42,7 @@ describe("POST /invoice/create", () => {
         invoice.invoice_lines[0].description
       );
       const savedInvoice = await Invoice.findById(res.body._id);
-      expect(savedInvoice._id.toString()).toEqual(nweInvoice[0]._id);
+      expect(savedInvoice._id.toString()).toEqual(newInvoice[0]._id);
     });
   });
 
@@ -75,21 +75,21 @@ describe("POST /invoice/create", () => {
 describe("GET /invoice/read/:id", () => {
   describe("get an invoice successfully", () => {
     test("should respond with a 200 status code & return the invoice", async () => {
-      const res = await request.get(`/invoice/read/${nweInvoice[0]._id}`);
+      const res = await request.get(`/invoice/read/${newInvoice[0]._id}`);
       const savedInvoice = await Invoice.findById(res.body._id);
       expect(res.statusCode).toBe(200);
-      expect(savedInvoice._id.toString()).toEqual(nweInvoice[0]._id);
-      expect(savedInvoice.status).toBe(nweInvoice[0].status);
-      expect(savedInvoice.description).toBe(nweInvoice[0].description);
-      expect(savedInvoice.amount).toBe(nweInvoice[0].amount);
+      expect(savedInvoice._id.toString()).toEqual(newInvoice[0]._id);
+      expect(savedInvoice.status).toBe(newInvoice[0].status);
+      expect(savedInvoice.description).toBe(newInvoice[0].description);
+      expect(savedInvoice.amount).toBe(newInvoice[0].amount);
       expect(new Date(savedInvoice.date)).toStrictEqual(
-        new Date(nweInvoice[0].date)
+        new Date(newInvoice[0].date)
       );
       expect(savedInvoice.invoice_lines[0].amount).toEqual(
-        nweInvoice[0].invoice_lines[0].amount
+        newInvoice[0].invoice_lines[0].amount
       );
       expect(savedInvoice.invoice_lines[0].description).toEqual(
-        nweInvoice[0].invoice_lines[0].description
+        newInvoice[0].invoice_lines[0].description
       );
     });
   });
@@ -109,22 +109,22 @@ describe("PATCH /invoice/update/:id", () => {
   describe("update an invoice successfully", () => {
     test("should respond with a 200 status code & update the invoice", async () => {
       const res = await request
-        .patch(`/invoice/update/${nweInvoice[0]._id}`)
+        .patch(`/invoice/update/${newInvoice[0]._id}`)
         .send({ status: "Paid" });
       const savedInvoice = await Invoice.findById(res.body._id);
       expect(res.statusCode).toBe(200);
-      expect(savedInvoice._id.toString()).toEqual(nweInvoice[0]._id);
+      expect(savedInvoice._id.toString()).toEqual(newInvoice[0]._id);
       expect(savedInvoice.status).toBe("Paid");
-      expect(savedInvoice.description).toBe(nweInvoice[0].description);
-      expect(savedInvoice.amount).toBe(nweInvoice[0].amount);
+      expect(savedInvoice.description).toBe(newInvoice[0].description);
+      expect(savedInvoice.amount).toBe(newInvoice[0].amount);
       expect(new Date(savedInvoice.date)).toStrictEqual(
-        new Date(nweInvoice[0].date)
+        new Date(newInvoice[0].date)
       );
       expect(savedInvoice.invoice_lines[0].amount).toEqual(
-        nweInvoice[0].invoice_lines[0].amount
+        newInvoice[0].invoice_lines[0].amount
       );
       expect(savedInvoice.invoice_lines[0].description).toEqual(
-        nweInvoice[0].invoice_lines[0].description
+        newInvoice[0].invoice_lines[0].description
       );
     });
   });
@@ -145,8 +145,8 @@ describe("PATCH /invoice/update/:id", () => {
 describe("DELETE /invoice/delete/:id", () => {
   describe("delete an invoice successfully", () => {
     test("should respond with a 200 status code", async () => {
-      const res = await request.delete(`/invoice/delete/${nweInvoice[0]._id}`);
-      const deletedInvoice = await Invoice.findById(nweInvoice[0]._id);
+      const res = await request.delete(`/invoice/delete/${newInvoice[0]._id}`);
+      const deletedInvoice = await Invoice.findById(newInvoice[0]._id);
       expect(deletedInvoice).toBeNull();
       expect(res.statusCode).toBe(200);
     });

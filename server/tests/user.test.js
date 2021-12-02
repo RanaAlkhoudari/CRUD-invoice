@@ -3,10 +3,12 @@ const supertest = require("supertest");
 const request = supertest(app);
 const mongoose = require("mongoose");
 const User = require("../models/userModel");
+const clearDatabase = require("../helpers/clearDatabase");
 
-afterAll(async () => {
-  mongoose.connection.close();
-});
+beforeAll(async () => await clearDatabase());
+
+afterAll(() => mongoose.connection.close());
+
 const newUser = [];
 
 describe("POST /user/create", () => {
