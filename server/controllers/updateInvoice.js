@@ -1,11 +1,13 @@
 const Invoice = require("../models/invoiceModel");
 
 /**
- * This method uses two parameters the request and the response and it won't return anything
- *
- * @param {Object} req
- * @param {Object} res
- * @returns
+ * This method uses two parameters the request and the response and will either send a 200, 404 or 500 status response to the user.
+ * - 404: if the id of the request doesn't match an invoice's id in the database
+ * - 200: if the fields are correct
+ * - 500: if an unexpected error occurs
+ * @param {Object} req - The request of the user
+ * @param {Object} res - The response to the user
+ * @returns - nothing
  */
 
 async function updateInvoice(req, res) {

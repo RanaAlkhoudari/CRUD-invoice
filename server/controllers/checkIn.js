@@ -3,11 +3,14 @@ const Invoice = require("../models/invoiceModel");
 const checkActivity = require("../helpers/checkActivity");
 
 /**
- * This method uses two parameters the request and the response and it won't return anything
- *
- * @param {Object} req
- * @param {Object} res
- * @returns
+ * This method uses two parameters the request and the response and will either send a 201, 200, 400 or 500 status response to the user.
+ * - 400: if the membership's credits less than or equals 0, or the membership is cancelled
+ * - 201: if an invoice_line is successfully created
+ * - 200: if an invoice is successfully created
+ * - 500: if an unexpected error occurs
+ * @param {Object} req - The request of the user
+ * @param {Object} res - The response to the user
+ * @returns - nothing
  */
 
 async function checkIn(req, res) {
@@ -61,7 +64,7 @@ async function checkIn(req, res) {
           invoices: [...membership.invoices, savedInvoice],
         });
         await membership.save();
-        return res.status(201).json(savedInvoice);
+        res.status(201).json(savedInvoice);
       } else {
         const invoice = await Invoice.findById(matchInvoice[0]._id);
         const newInvoiceLine = {
@@ -72,7 +75,7 @@ async function checkIn(req, res) {
           invoice_lines: [...invoice.invoice_lines, newInvoiceLine],
         });
         await invoice.save();
-        return res.status(200).json(invoice);
+        res.status(200).json(invoice);
       }
     }
   } catch (error) {

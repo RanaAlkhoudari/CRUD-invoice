@@ -1,9 +1,10 @@
 /**
  * This method uses two parameters the start and the end date and it returns a boolean value
  *
- * @param {Date} start The start date
- * @param {Date} end   The end date
- * @returns {Boolean}  Returns true if the current date is between the start and the end date
+ * @param {Date} start - The start date
+ * @param {Date} end  - The end date
+ * @returns {Boolean} - Returns true if the current date is between the start and the end date
+ * otherwise, returns false
  */
 
 function checkActivity(start, end) {
