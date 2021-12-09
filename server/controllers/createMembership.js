@@ -1,8 +1,17 @@
 const Membership = require("../models/membershipModel");
 
+/**
+ * This method uses two parameters the request and the response and it won't return anything
+ *
+ * @param {Object} req
+ * @param {Object} res
+ * @returns
+ */
+
 async function createMembership(req, res) {
   try {
     const membership = await new Membership(req.body);
+    // Checking if the request doesn't have all the required fields
     if (
       typeof req.body.credits === "undefined" ||
       !req.body.start_date ||
